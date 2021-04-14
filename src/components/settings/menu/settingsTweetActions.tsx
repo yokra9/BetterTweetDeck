@@ -1,5 +1,5 @@
 import {css} from '@emotion/css';
-import React, {Fragment} from 'react';
+import React, {FC, Fragment} from 'react';
 
 import {BTDTweetActionsPosition} from '../../../features/changeTweetActions';
 import {BTDSettings} from '../../../types/btdSettingsTypes';
@@ -9,13 +9,11 @@ import {BTDRadioSelectSettingsRow} from '../components/radioSelectSettingsRow';
 import {SettingsButton} from '../components/settingsButton';
 import {SettingsRow, SettingsRowTitle} from '../components/settingsRow';
 import {SettingsTextInput} from '../components/settingsTextInput';
-import {formatDateTime, SettingsMenuRenderer} from '../settingsComponents';
+import {SettingsTextInputWithAnnotation} from '../components/settingsTimeFormatInput';
+import {formatDateTime, SettingsMenuSectionProps} from '../settingsComponents';
 
-export const renderTweetActionsSettings: SettingsMenuRenderer = (
-  settings,
-  makeOnSettingsChange,
-  _setEditorHasErrors
-) => {
+export const SettingsTweetActions: FC<SettingsMenuSectionProps> = (props) => {
+  const {settings, makeOnSettingsChange} = props;
   return (
     <Fragment>
       <BTDRadioSelectSettingsRow
@@ -213,6 +211,19 @@ export const renderTweetActionsSettings: SettingsMenuRenderer = (
             initialValue: settings.showAccountChoiceOnFavorite,
             key: 'showAccountChoiceOnFavorite',
             label: <Trans id="settings_show_account_picker_like" />,
+            extraContent: (newSettings) => {
+              return (
+                newSettings && (
+                  <SettingsTextInputWithAnnotation
+                    isDisabled={!newSettings.showAccountChoiceOnFavorite}
+                    value={newSettings.accountChoiceAllowList}
+                    onChange={makeOnSettingsChange('accountChoiceAllowList')}
+                    annotation={
+                      <Trans id="settings_usernames_like_picker_allowlist" />
+                    }></SettingsTextInputWithAnnotation>
+                )
+              );
+            },
           },
           {
             initialValue: settings.replaceHeartsByStars,

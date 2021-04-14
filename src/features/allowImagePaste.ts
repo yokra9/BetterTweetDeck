@@ -1,7 +1,7 @@
 import {makeBTDModule} from '../types/btdCommonTypes';
 
 export const allowImagePaste = makeBTDModule(({jq}) => {
-  document.addEventListener('paste', (ev) => {
+  document.addEventListener('paste', async (ev) => {
     if (!ev.clipboardData || !ev.target) {
       return;
     }
@@ -14,17 +14,31 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
 
     const files: File[] = [];
 
-    Array.from(items).forEach((item) => {
-      if (item.type.indexOf('image') < 0) {
-        return;
-      }
-      const blob = item.getAsFile();
-      if (!blob) {
-        return;
-      }
+    await (async () => {
+      for (let item of Array.from(items)) {
+        if (item.type.indexOf('image') < 0) {
+          continue;
+        }
+        const blob = item.getAsFile();
+        if (!blob) {
+          continue;
+        }
 
-      files.push(blob);
-    });
+        const maxFileSize = 5242880;
+        if (blob.size < maxFileSize) {
+          files.push(blob);
+        } else {
+          try {
+            let file = blob;
+            do file = await resizeImage(file, maxFileSize);
+            while (file.size > maxFileSize);
+            files.push(file);
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      }
+    })();
 
     if (files.length === 0) {
       return;
@@ -58,3 +72,48 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
     });
   });
 });
+
+function resizeImage(file: File, capaticy: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const compressibility = Math.sqrt(capaticy / file.size);
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth * compressibility;
+      canvas.height = image.naturalHeight * compressibility;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx == null) {
+        reject('cannot get context.');
+        return;
+      }
+
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        image.naturalWidth,
+        image.naturalHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      canvas.toBlob((blob) => {
+        if (blob == null) {
+          reject('cannot convert canvas to blob.');
+          return;
+        }
+        resolve(new File([blob], file.name, {type: file.type, lastModified: file.lastModified}));
+      });
+    };
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result == 'string') image.src = reader.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}

@@ -25,15 +25,7 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
         }
 
         const maxFileSize = 5242880;
-        if (blob.size < maxFileSize) {
-          files.push(blob);
-        } else {
-          try {
-            files.push(await resizeImage(blob, maxFileSize));
-          } catch (err) {
-            console.log(err);
-          }
-        }
+        files.push(await resizeImageRecursively(blob, maxFileSize));
       }
     })();
 
@@ -69,6 +61,17 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
     });
   });
 });
+
+async function resizeImageRecursively(file: File, capaticy: number): Promise<File> {
+  try {
+    return file.size < capaticy
+      ? file
+      : await resizeImageRecursively(await resizeImage(file, capaticy), capaticy);
+  } catch (err) {
+    console.error(err);
+    return file;
+  }
+}
 
 function resizeImage(file: File, capaticy: number): Promise<File> {
   return new Promise((resolve, reject) => {

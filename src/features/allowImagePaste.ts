@@ -17,11 +17,11 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
     await (async () => {
       for (let item of Array.from(items)) {
         if (item.type.indexOf('image') < 0) {
-          return;
+          continue;
         }
         const blob = item.getAsFile();
         if (!blob) {
-          return;
+          continue;
         }
 
         const maxFileSize = 5242880;

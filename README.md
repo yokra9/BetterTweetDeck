@@ -1,3 +1,9 @@
+**THIS REPO IS BTW FORK FOR PERSONAL USE**
+
+- Automatically resize bigger image than 5MB pasting from clipboard([#503](https://github.com/eramdam/BetterTweetDeck/pull/503))
+
+---
+
 ![](https://raw.githubusercontent.com/eramdam/BetterTweetDeck/master/meta/better.tw_.png)
 
 <h1 align="center">Better TweetDeck</h1>

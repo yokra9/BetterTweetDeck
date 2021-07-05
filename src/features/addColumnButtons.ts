@@ -18,6 +18,7 @@ export const maybeAddColumnsButtons = makeBTDModule(({TD, jq, settings}) => {
     showClearButtonInColumnsHeader: showClear,
     showCollapseButtonInColumnsHeader: showCollapse,
     showRemoveButtonInColumnsHeader: showRemove,
+    showClearAllButtonInSidebar: showClearAll,
   } = settings;
 
   if (!showClear && !showCollapse && !showRemove) {
@@ -40,7 +41,16 @@ export const maybeAddColumnsButtons = makeBTDModule(({TD, jq, settings}) => {
     return string.replace(marker, marker + additionalMarkup);
   });
 
-  jq(document).on('mousedown', '.btd-remove-column-link', (ev) => {
+  if (showClearAll) {
+    modifyMustacheTemplate(TD, 'topbar/app_header.mustache', (string) => {
+      return string.replace(
+        `{{_i}}Add column{{/i}}</div> </a>`,
+        `{{_i}}Add column{{/i}}</div> </a> <a class="btd-clear-all-columns js-header-action link-clean cf app-nav-link padding-h--16 padding-v--2 txt-bold" data-action="clear-all" data-title="{{_i}}Clear all columns{{/i}}"> <div class="obj-left margin-l--2"> <i class="icon icon-clear-timeline icon-medium"></i> </div> <div class="nbfc padding-ts hide-condensed txt-size--14 txt-bold app-nav-link-text">{{_i}}Clear all columns{{/i}}</div> </a>`
+      );
+    });
+  }
+
+  jq(document).on('pointerdown', '.btd-remove-column-link', (ev) => {
     ev.preventDefault();
 
     const element = ev.target;
@@ -58,7 +68,7 @@ export const maybeAddColumnsButtons = makeBTDModule(({TD, jq, settings}) => {
     TD.controller.columnManager.deleteColumn(columnKey);
   });
 
-  jq(document).on('mousedown', '.btd-clear-column-link', (ev) => {
+  jq(document).on('pointerdown', '.btd-clear-column-link', (ev) => {
     ev.preventDefault();
 
     const element = ev.target;
@@ -77,7 +87,7 @@ export const maybeAddColumnsButtons = makeBTDModule(({TD, jq, settings}) => {
   });
 
   jq(document).on(
-    'mousedown',
+    'pointerdown',
     '.column-panel header.column-header .btd-toggle-collapse-column-link',
     (ev) => {
       ev.preventDefault();
@@ -97,6 +107,13 @@ export const maybeAddColumnsButtons = makeBTDModule(({TD, jq, settings}) => {
     const thisColumn = ev.target.closest('[data-column]');
     const columnKey = thisColumn.getAttribute('data-column');
     toggleCollapseColumn(TD, columnKey, true);
+  });
+
+  jq('body').on('click', '.btd-clear-all-columns', () => {
+    const confirmed = confirm('This will clear ALL the columns, are you sure you want to do it?');
+    if (confirmed) {
+      TD.controller.columnManager.getAllOrdered().forEach((c) => c.clear());
+    }
   });
 
   const columnsSettings = getCollapsedColumnState();

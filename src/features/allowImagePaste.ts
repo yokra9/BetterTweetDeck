@@ -15,7 +15,8 @@ export const allowImagePaste = makeBTDModule(({jq}) => {
     const files: File[] = [];
 
     await (async () => {
-      for (let item of Array.from(items)) {
+      const arr = [Array.from(items)[0]];
+      for (let item of arr) {
         if (item.type.indexOf('image') < 0) {
           continue;
         }
